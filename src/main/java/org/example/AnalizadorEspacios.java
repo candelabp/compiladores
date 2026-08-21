@@ -1,14 +1,16 @@
 package org.example;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
-public class Main {
+public class AnalizadorEspacios {
     private enum TipoToken {
         IDENTIFICADOR,
         ASIGNACION,
         NUMERO,
+        OPERADOR_ARITMETICO,
         DELIMITADOR
     }
 
@@ -16,15 +18,15 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        try (Scanner teclado = new Scanner(System.in)) {
-            System.out.print("Ingrese una cadena: ");
-            String entrada = teclado.nextLine();
+        System.out.println("Ingrese una expresion y finalice la entrada con EOF:");
 
-            try {
-                mostrarTokens(analizar(entrada));
-            } catch (IllegalArgumentException error) {
-                System.err.println("Error lexico: " + error.getMessage());
-            }
+        try {
+            String entrada = new String(System.in.readAllBytes(), StandardCharsets.UTF_8);
+            mostrarTokens(analizar(entrada));
+        } catch (IOException error) {
+            System.err.println("No se pudo leer la entrada: " + error.getMessage());
+        } catch (IllegalArgumentException error) {
+            System.err.println("Error lexico: " + error.getMessage());
         }
     }
 
@@ -35,6 +37,7 @@ public class Main {
         while (posicion < entrada.length()) {
             char caracter = entrada.charAt(posicion);
 
+            // Los espacios, tabulaciones y saltos de linea no generan tokens.
             if (Character.isWhitespace(caracter)) {
                 posicion++;
                 continue;
@@ -65,6 +68,13 @@ public class Main {
 
             if (caracter == '=') {
                 tokens.add(new Token(TipoToken.ASIGNACION, String.valueOf(caracter)));
+                posicion++;
+                continue;
+            }
+
+            if (caracter == '+') {
+                tokens.add(new Token(TipoToken.OPERADOR_ARITMETICO,
+                        String.valueOf(caracter)));
                 posicion++;
                 continue;
             }

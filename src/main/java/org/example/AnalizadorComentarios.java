@@ -4,31 +4,35 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
+public class AnalizadorComentarios {
     private enum TipoToken {
         IDENTIFICADOR,
         ASIGNACION,
         NUMERO,
-        DELIMITADOR
+        DELIMITADOR,
+        COMENTARIO
     }
 
     private record Token(TipoToken tipo, String lexema) {
     }
 
     public static void main(String[] args) {
+        boolean descartarComentarios = args.length > 0
+                && args[0].equalsIgnoreCase("--descartar-comentarios");
+
         try (Scanner teclado = new Scanner(System.in)) {
-            System.out.print("Ingrese una cadena: ");
+            System.out.print("Ingrese una linea: ");
             String entrada = teclado.nextLine();
 
             try {
-                mostrarTokens(analizar(entrada));
+                mostrarTokens(analizar(entrada, descartarComentarios));
             } catch (IllegalArgumentException error) {
                 System.err.println("Error lexico: " + error.getMessage());
             }
         }
     }
 
-    private static List<Token> analizar(String entrada) {
+    private static List<Token> analizar(String entrada, boolean descartarComentarios) {
         List<Token> tokens = new ArrayList<>();
         int posicion = 0;
 
@@ -38,6 +42,14 @@ public class Main {
             if (Character.isWhitespace(caracter)) {
                 posicion++;
                 continue;
+            }
+
+            if (caracter == '/' && posicion + 1 < entrada.length()
+                    && entrada.charAt(posicion + 1) == '/') {
+                if (!descartarComentarios) {
+                    tokens.add(new Token(TipoToken.COMENTARIO, entrada.substring(posicion)));
+                }
+                break;
             }
 
             if (Character.isLetter(caracter) || caracter == '_') {
@@ -83,12 +95,12 @@ public class Main {
     }
 
     private static void mostrarTokens(List<Token> tokens) {
-        String borde = "+----------------------+----------------------+";
+        String borde = "+----------------------+------------------------------+";
         System.out.println(borde);
-        System.out.printf("| %-20s | %-20s |%n", "TOKEN", "LEXEMA");
+        System.out.printf("| %-20s | %-28s |%n", "TOKEN", "LEXEMA");
         System.out.println(borde);
         for (Token token : tokens) {
-            System.out.printf("| %-20s | %-20s |%n", token.tipo(), token.lexema());
+            System.out.printf("| %-20s | %-28s |%n", token.tipo(), token.lexema());
         }
         System.out.println(borde);
     }

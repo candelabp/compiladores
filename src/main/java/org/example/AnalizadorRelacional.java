@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
+public class AnalizadorRelacional {
     private enum TipoToken {
         IDENTIFICADOR,
-        ASIGNACION,
+        OPERADOR_RELACIONAL,
         NUMERO,
         DELIMITADOR
     }
@@ -17,7 +17,7 @@ public class Main {
 
     public static void main(String[] args) {
         try (Scanner teclado = new Scanner(System.in)) {
-            System.out.print("Ingrese una cadena: ");
+            System.out.print("Ingrese una expresion relacional: ");
             String entrada = teclado.nextLine();
 
             try {
@@ -63,10 +63,24 @@ public class Main {
                 continue;
             }
 
-            if (caracter == '=') {
-                tokens.add(new Token(TipoToken.ASIGNACION, String.valueOf(caracter)));
-                posicion++;
-                continue;
+            if (caracter == '>' || caracter == '<' || caracter == '=' || caracter == '!') {
+                int inicio = posicion++;
+
+                if (posicion < entrada.length() && entrada.charAt(posicion) == '=') {
+                    posicion++;
+                    tokens.add(new Token(TipoToken.OPERADOR_RELACIONAL,
+                            entrada.substring(inicio, posicion)));
+                    continue;
+                }
+
+                if (caracter == '>' || caracter == '<') {
+                    tokens.add(new Token(TipoToken.OPERADOR_RELACIONAL,
+                            String.valueOf(caracter)));
+                    continue;
+                }
+
+                throw new IllegalArgumentException(
+                        "operador relacional incompleto en la posicion " + inicio);
             }
 
             if (caracter == ';') {

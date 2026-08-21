@@ -4,20 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
+public class AnalizadorPrioridad {
     private enum TipoToken {
         IDENTIFICADOR,
         ASIGNACION,
-        NUMERO,
+        OPERADOR_RELACIONAL,
         DELIMITADOR
     }
 
     private record Token(TipoToken tipo, String lexema) {
     }
 
+    private record Operador(Token token, int longitud) {
+    }
+
     public static void main(String[] args) {
         try (Scanner teclado = new Scanner(System.in)) {
-            System.out.print("Ingrese una cadena: ");
+            System.out.print("Ingrese una expresion: ");
             String entrada = teclado.nextLine();
 
             try {
@@ -52,20 +55,10 @@ public class Main {
                 continue;
             }
 
-            if (Character.isDigit(caracter)) {
-                int inicio = posicion++;
-                while (posicion < entrada.length()
-                        && Character.isDigit(entrada.charAt(posicion))) {
-                    posicion++;
-                }
-                tokens.add(new Token(TipoToken.NUMERO,
-                        entrada.substring(inicio, posicion)));
-                continue;
-            }
-
-            if (caracter == '=') {
-                tokens.add(new Token(TipoToken.ASIGNACION, String.valueOf(caracter)));
-                posicion++;
+            Operador operador = reconocerOperador(entrada, posicion);
+            if (operador != null) {
+                tokens.add(operador.token());
+                posicion += operador.longitud();
                 continue;
             }
 
@@ -80,6 +73,29 @@ public class Main {
         }
 
         return tokens;
+    }
+
+    private static Operador reconocerOperador(String entrada, int posicion) {
+        // Primero se intenta la coincidencia valida mas larga.
+        if (posicion + 1 < entrada.length()) {
+            String candidatoLargo = entrada.substring(posicion, posicion + 2);
+            if (candidatoLargo.equals("==") || candidatoLargo.equals(">=")
+                    || candidatoLargo.equals("<=") || candidatoLargo.equals("!=")) {
+                return new Operador(
+                        new Token(TipoToken.OPERADOR_RELACIONAL, candidatoLargo), 2);
+            }
+        }
+
+        char candidatoCorto = entrada.charAt(posicion);
+        if (candidatoCorto == '>' || candidatoCorto == '<') {
+            return new Operador(new Token(TipoToken.OPERADOR_RELACIONAL,
+                    String.valueOf(candidatoCorto)), 1);
+        }
+        if (candidatoCorto == '=') {
+            return new Operador(new Token(TipoToken.ASIGNACION,
+                    String.valueOf(candidatoCorto)), 1);
+        }
+        return null;
     }
 
     private static void mostrarTokens(List<Token> tokens) {

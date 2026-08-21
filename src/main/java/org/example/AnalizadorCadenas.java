@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
+public class AnalizadorCadenas {
     private enum TipoToken {
         IDENTIFICADOR,
         ASIGNACION,
-        NUMERO,
+        CADENA,
         DELIMITADOR
     }
 
@@ -17,7 +17,7 @@ public class Main {
 
     public static void main(String[] args) {
         try (Scanner teclado = new Scanner(System.in)) {
-            System.out.print("Ingrese una cadena: ");
+            System.out.print("Ingrese una asignacion de cadena: ");
             String entrada = teclado.nextLine();
 
             try {
@@ -52,20 +52,35 @@ public class Main {
                 continue;
             }
 
-            if (Character.isDigit(caracter)) {
-                int inicio = posicion++;
-                while (posicion < entrada.length()
-                        && Character.isDigit(entrada.charAt(posicion))) {
-                    posicion++;
-                }
-                tokens.add(new Token(TipoToken.NUMERO,
-                        entrada.substring(inicio, posicion)));
-                continue;
-            }
-
             if (caracter == '=') {
                 tokens.add(new Token(TipoToken.ASIGNACION, String.valueOf(caracter)));
                 posicion++;
+                continue;
+            }
+
+            if (caracter == '"') {
+                int inicio = posicion++;
+                boolean cerrada = false;
+
+                while (posicion < entrada.length()) {
+                    if (entrada.charAt(posicion) == '\\' && posicion + 1 < entrada.length()) {
+                        posicion += 2;
+                    } else if (entrada.charAt(posicion) == '"') {
+                        posicion++;
+                        cerrada = true;
+                        break;
+                    } else {
+                        posicion++;
+                    }
+                }
+
+                if (!cerrada) {
+                    throw new IllegalArgumentException(
+                            "cadena sin comilla de cierre en la posicion " + inicio);
+                }
+
+                tokens.add(new Token(TipoToken.CADENA,
+                        entrada.substring(inicio, posicion)));
                 continue;
             }
 
