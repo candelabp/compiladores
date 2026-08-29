@@ -1,0 +1,5 @@
+int contador = 10;
+
+float precio = 25.50;
+
+contador = contador + 1;

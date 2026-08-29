@@ -1,0 +1,6 @@
+int edad = 25;
+float altura = 1.83;
+if edad >= 18 {
+    edad = edad + 1;
+}
+// Fin del programa
